@@ -1,0 +1,49 @@
+#version 330 core
+
+in vec4 vs_vertexColor;
+in vec3 Normal_cameraspace;
+in vec3 EyeDirection_cameraspace;
+in vec3 LightDirection_cameraspace;
+
+out vec3 color;
+
+uniform float light_distance;
+
+void main(){
+    
+    // Lights properties
+    vec3 LightAmbientColor = vec3(1.0, 1.0, 1.0);
+    vec3 LightDiffuseColor = vec3(0.5, 0.5, 0.5);
+    vec3 LightSpecularColor = vec3(0.5, 0.5, 0.5);
+    
+    float k_constant = 1.0;
+    float k_linear = 0.005;
+    float k_quadratic = 0.0005;
+    
+    // Material properties
+    vec3 MaterialAmbientColor = vs_vertexColor.rgb;
+    vec3 MaterialDiffuseColor = vs_vertexColor.rgb;
+    vec3 MaterialSpecularColor = MaterialDiffuseColor * 0.1;
+    
+    // Ambient
+    vec3 TotalAmbientColor = LightAmbientColor * MaterialAmbientColor;
+    
+    // Diffuse
+    vec3 norm = normalize(Normal_cameraspace);
+    vec3 norm_LightDirection_cameraspace = normalize(LightDirection_cameraspace);
+    
+    float diffuse = max(dot(norm, norm_LightDirection_cameraspace), 0.0);
+    
+    vec3 TotalDiffuseColor = diffuse * LightDiffuseColor * MaterialDiffuseColor;
+    
+    // Specular
+    vec3 viewDir = normalize(EyeDirection_cameraspace);
+    vec3 reflectDir = reflect(-norm_LightDirection_cameraspace, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+    
+    vec3 TotalSpecularColor = spec * LightSpecularColor * MaterialSpecularColor;
+    
+    //float attu = 1.0f / (k_constant + k_linear*light_distance + k_quadratic*light_distance*light_distance);
+    float attu = 0.577969;
+    color = attu * (TotalAmbientColor + TotalDiffuseColor + TotalSpecularColor);
+}
